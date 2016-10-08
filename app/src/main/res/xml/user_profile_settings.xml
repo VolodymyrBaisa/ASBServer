@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <ListPreference
+        android:title="@string/app_pref_ace_stream_gender"
+        android:summary="@string/app_pref_summary_ace_stream_gender"
+        android:key="key_pref_ace_stream_gender"
+        android:defaultValue="1"
+        android:entries="@array/app_pref_array_ace_stream_gender"
+        android:entryValues="@array/app_pref_array_ace_stream_gender_alias"/>
+
+    <ListPreference
+        android:title="@string/app_pref_ace_string_age"
+        android:summary="@string/app_pref_summary_ace_stream_age"
+        android:key="key_pref_ace_stream_age"
+        android:defaultValue="3"
+        android:entries="@array/app_pref_array_ace_stream_age"
+        android:entryValues="@array/app_pref_array_ace_stream_age_alias" />
+</PreferenceScreen>

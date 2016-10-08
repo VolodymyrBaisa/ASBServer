@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">ASBServer</string>
+    <string name="app_label_settings">Settings ASBServer</string>
+    <string name="app_label_user_profile_name">User Profile Settings</string>
+
+    <string name="app_progress_dialog_title">Start AceStream</string>
+    <string name="app_progress_dialog_msg">Tray connection...</string>
+
+    <string name="app_image_view_content_description">Logo</string>
+    
+    <string name="app_menu_settings">Settings</string>
+    <string name="app_menu_user_profile_settings">User profile</string>
+    <string name="app_menu_quit">Quit</string>
+    
+    <string name="app_pref_category_ace_stream_settings">Connection to Ace Stream server</string>
+    <string name="app_pref_ace_stream_ip">Ace Stream IP</string>
+    <string name="app_pref_summary_ace_stream_ip">Connect to the Ace Stream server using the server’s IP address</string>
+    <string name="app_pref_summary_ace_stream_port">Connect to the Ace Stream server using the server port</string>
+    <string name="app_pref_ace_stream_port">Ace Stream port</string>
+    <string name="app_pref_ace_stream_out_video_port">Ace Stream out video port</string>
+    <string name="app_pref_summary_ace_stream_out_video_port">Ace Steam server transferring video data through this port</string>
+
+    <string name="app_pref_category_asb_server_settings">ASBServer Settings</string>
+    <string name="app_pref_asb_server_port">ASBServer port</string>
+    <string name="app_pref_summary_asb_server_port">Connect to the ASBServer</string>
+
+    <string name="app_pref_ace_stream_gender">Gender</string>
+    <string name="app_pref_summary_ace_stream_gender">What is your gender identity?</string>
+    <string name="app_pref_ace_stream_gender_male">Male</string>
+    <string name="app_pref_ace_stream_gender_female">Female</string>
+    <string name="app_pref_ace_string_age">Age</string>
+    <string name="app_pref_summary_ace_stream_age">How old are you?</string>
+    <string name="app_pref_ace_string_age_under">Under 13</string>
+    <string name="app_pref_ace_string_age_above">Above 64</string>
+    <string name="app_version">v0.0.1</string>
+</resources>

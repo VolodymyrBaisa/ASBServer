@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceCategory android:title="@string/app_pref_category_ace_stream_settings">
+    <EditTextPreference
+        android:title="@string/app_pref_ace_stream_ip"
+        android:summary="@string/app_pref_summary_ace_stream_ip"
+        android:key="key_pref_ace_stream_ip"
+        android:defaultValue="127.0.0.1"/>
+
+    <EditTextPreference
+        android:title="@string/app_pref_ace_stream_port"
+        android:summary="@string/app_pref_summary_ace_stream_port"
+        android:key="key_pref_ace_stream_port"
+        android:defaultValue="62062"/>
+
+    <EditTextPreference
+        android:title="@string/app_pref_ace_stream_out_video_port"
+        android:summary="@string/app_pref_summary_ace_stream_out_video_port"
+        android:key="key_pref_ace_stream_out_video_port"
+        android:defaultValue="6878"/>
+</PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/app_pref_category_asb_server_settings">
+        <EditTextPreference
+            android:title="@string/app_pref_asb_server_port"
+            android:summary="@string/app_pref_summary_asb_server_port"
+            android:key="key_pref_asb_server_port"
+            android:defaultValue="8080"/>
+    </PreferenceCategory>
+</PreferenceScreen>
