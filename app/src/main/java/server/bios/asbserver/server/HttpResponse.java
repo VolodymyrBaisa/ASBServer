@@ -79,4 +79,10 @@ public class HttpResponse {
 
         throw new IllegalAccessError("Unkwown protocol");
     }
+
+    public void close(){
+        if (response == null) throw new NullPointerException("response == null");
+        client.connectionPool().evictAll();
+        response.body().close();
+    }
 }

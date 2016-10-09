@@ -1,6 +1,7 @@
 package server.bios.asbserver.server;
 
 import android.os.SystemClock;
+import android.provider.ContactsContract;
 import android.util.Log;
 
 import org.greenrobot.eventbus.Subscribe;
@@ -62,7 +63,7 @@ public class Server {
                     }
 
                     if (!command.isEmpty() && (content != null && !content.isEmpty())) {
-                        DataExchange dataExchange = new DataExchange(socket, command, content);
+                        DataExchange dataExchange = DataExchange.getInstance(socket, command, content);
 
                         boolean isConnected;
 
@@ -102,10 +103,10 @@ public class Server {
     public void onEvent(LinkEvent event) {
         new Thread(() -> {
             _Socket socket = event.socket;
+            HttpResponse httpResponse = new HttpResponse(CONNECTION_TIMEOUT, READ_TIMEOUT);
             try {
                 URL url = new URL(event.link);
                 //Get the link from Ace Stream Server
-                HttpResponse httpResponse = new HttpResponse(CONNECTION_TIMEOUT, READ_TIMEOUT);
                 httpResponse.setUrl(url);
 
                 String headers = httpResponse.sendHeaderResponce().toString();
@@ -117,6 +118,7 @@ public class Server {
             } finally {
                 try {
                     if (socket != null) socket.close();
+                    if (httpResponse != null) httpResponse.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

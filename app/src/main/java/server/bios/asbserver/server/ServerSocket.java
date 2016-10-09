@@ -36,7 +36,7 @@ public class ServerSocket {
     }
 
     private class Socket implements _Socket {
-        private SocketChannel socketChannel;
+        private volatile SocketChannel socketChannel;
 
         public Socket() throws IOException {
             socketChannel = serverSocketChannel.accept();

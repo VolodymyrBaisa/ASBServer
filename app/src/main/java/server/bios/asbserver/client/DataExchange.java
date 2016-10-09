@@ -18,24 +18,34 @@ import server.bios.asbserver.utils.Regex;
  * Created by BIOS on 9/11/2016.
  */
 public class DataExchange implements Runnable {
+    private volatile static DataExchange dataExchange;
     private static final String TAG = DataExchange.class.getName();
     private static final Settings SETTINGS = Settings.getInstance();
     private static final ChannelsStorage CHANNELS_STORAGE = ChannelsStorage.getInstance();
     private static final Regex REGEX = Regex.getInstance();
     private static final AceStreamAPI ACE_STREAM_API = AceStreamAPI.getInstance();
     private ClientSocket clientSocket;
-    private String channel;
     private String command;
     private String content;
     private _Socket socket;
     private volatile boolean isStop;
 
-    public DataExchange(_Socket socket, String command, String content) {
+    private DataExchange(_Socket socket, String command, String content) {
         this.socket = socket;
         this.command = command;
         this.content = content;
         clientSocket = new ClientSocket(SETTINGS.getAceStreamIP(), SETTINGS.getAceStreamPort());
         BusStation.getBus().register(this);
+    }
+
+    public static DataExchange getInstance(_Socket socket, String command, String content) {
+        if (dataExchange == null) {
+            synchronized (DataExchange.class) {
+                dataExchange = new DataExchange(socket, command, content);
+                return dataExchange;
+            }
+        }
+        return dataExchange;
     }
 
     public void connect() {
@@ -53,17 +63,7 @@ public class DataExchange implements Runnable {
     @Override
     public void run() {
         try {
-            clientSocket.sendData(AceStreamAPI.HELLO.concat("\r\n"));
-
-            String response = getResponse();
-            clientSocket.sendData(AceStreamAPI.READY_KEY.concat(ACE_STREAM_API.key(REGEX.parser("key=(.*?)\\s", response, 1))).concat("\r\n"));
-
-            clientSocket.sendData(ACE_STREAM_API.userdata(SETTINGS.getGender(), SETTINGS.getAge()).concat("\r\n"));
-            getResponse();
-
-            clientSocket.sendData(ACE_STREAM_API.loadasync(command, content).concat("\r\n"));
-
-            channel = getResponse();
+            String channel = getChannelName();
 
             if (!CHANNELS_STORAGE.contains(channel)) {
                 CHANNELS_STORAGE.put(channel, null);
@@ -73,7 +73,7 @@ public class DataExchange implements Runnable {
 
                 CHANNELS_STORAGE.remove(channel);
             } else {
-                BusStation.getBus().post(new LinkEvent(CHANNELS_STORAGE.get(channel), socket));
+
             }
         } catch (IOException e) {
             Log.e(TAG, "Error write buffer to socket channel", e);
@@ -81,12 +81,12 @@ public class DataExchange implements Runnable {
             Log.e(TAG, "The Character Encoding is not supported or requested algorithm is not available in the environment", e);
         } finally {
             try {
-                clientSocket.sendData(AceStreamAPI.STOP.concat("\r\n"));
-                getResponse();
-
+                if (isStop) {
+                    clientSocket.sendData(AceStreamAPI.STOP.concat("\r\n"));
+                    getResponse();
+                }
                 clientSocket.sendData(AceStreamAPI.SHUTDOWN.concat("\r\n"));
                 getResponse();
-
                 clientSocket.close();
                 BusStation.getBus().unregister(this);
             } catch (IOException e) {
@@ -95,15 +95,27 @@ public class DataExchange implements Runnable {
         }
     }
 
+    private String getChannelName() throws IOException, NoSuchAlgorithmException {
+        clientSocket.sendData(AceStreamAPI.HELLO.concat("\r\n"));
+
+        String response = getResponse();
+        clientSocket.sendData(AceStreamAPI.READY_KEY.concat(ACE_STREAM_API.key(REGEX.parser("key=(.*?)\\s", response, 1))).concat("\r\n"));
+
+        clientSocket.sendData(ACE_STREAM_API.userdata(SETTINGS.getGender(), SETTINGS.getAge()).concat("\r\n"));
+        getResponse();
+
+        clientSocket.sendData(ACE_STREAM_API.loadasync(command, content).concat("\r\n"));
+
+        return getResponse();
+    }
+
     private String getResponse() {
         try {
             do {
                 String[] lines = clientSocket.getData().split("\r\n");
                 for (String response : lines) {
                     Log.d(TAG, response);
-
                     String responseAPI = REGEX.parser("\\w+(?=\\s|$)", response);
-
                     switch (responseAPI) {
                         case AceStreamAPI.HELLOTS:
                         case AceStreamAPI.AUTH:
@@ -126,6 +138,7 @@ public class DataExchange implements Runnable {
                             break;
                         case AceStreamAPI.STATE:
                             if (response.contains("6")) return "";
+                            if (response.contains("0")) return "";
                             break;
                         case AceStreamAPI.STATUS:
                             if (response.contains("err")) return "";
@@ -134,7 +147,6 @@ public class DataExchange implements Runnable {
                             return "";
                         case AceStreamAPI.SHUTDOWN:
                             return "";
-                        default:
                     }
                 }
             } while (!isStop);

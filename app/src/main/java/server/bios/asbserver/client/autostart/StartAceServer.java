@@ -20,6 +20,7 @@ public class StartAceServer {
     }
 
     public static void init(Context context){
+
         synchronized (StartAceServer.class) {
             startAceServer = new StartAceServer(context);
         }
