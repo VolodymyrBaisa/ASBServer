@@ -63,7 +63,7 @@ public class Server {
                     }
 
                     if (!command.isEmpty() && (content != null && !content.isEmpty())) {
-                        DataExchange dataExchange = DataExchange.getInstance(socket, command, content);
+                        DataExchange dataExchange = new DataExchange(socket, command, content);
 
                         boolean isConnected;
 

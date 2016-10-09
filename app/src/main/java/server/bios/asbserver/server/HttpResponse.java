@@ -82,7 +82,6 @@ public class HttpResponse {
 
     public void close(){
         if (response == null) throw new NullPointerException("response == null");
-        client.connectionPool().evictAll();
         response.body().close();
     }
 }

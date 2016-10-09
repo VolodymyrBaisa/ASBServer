@@ -18,7 +18,6 @@ import server.bios.asbserver.utils.Regex;
  * Created by BIOS on 9/11/2016.
  */
 public class DataExchange implements Runnable {
-    private volatile static DataExchange dataExchange;
     private static final String TAG = DataExchange.class.getName();
     private static final Settings SETTINGS = Settings.getInstance();
     private static final ChannelsStorage CHANNELS_STORAGE = ChannelsStorage.getInstance();
@@ -30,22 +29,12 @@ public class DataExchange implements Runnable {
     private _Socket socket;
     private volatile boolean isStop;
 
-    private DataExchange(_Socket socket, String command, String content) {
+    public DataExchange(_Socket socket, String command, String content) {
         this.socket = socket;
         this.command = command;
         this.content = content;
         clientSocket = new ClientSocket(SETTINGS.getAceStreamIP(), SETTINGS.getAceStreamPort());
         BusStation.getBus().register(this);
-    }
-
-    public static DataExchange getInstance(_Socket socket, String command, String content) {
-        if (dataExchange == null) {
-            synchronized (DataExchange.class) {
-                dataExchange = new DataExchange(socket, command, content);
-                return dataExchange;
-            }
-        }
-        return dataExchange;
     }
 
     public void connect() {
@@ -66,14 +55,15 @@ public class DataExchange implements Runnable {
             String channel = getChannelName();
 
             if (!CHANNELS_STORAGE.contains(channel)) {
-                CHANNELS_STORAGE.put(channel, null);
-
                 clientSocket.sendData(ACE_STREAM_API.start(command, content).concat("\r\n"));
+                String link = getResponse();
+                CHANNELS_STORAGE.put(channel, link);
+                BusStation.getBus().post(new LinkEvent(link, socket));
                 getResponse();
 
                 CHANNELS_STORAGE.remove(channel);
             } else {
-
+                BusStation.getBus().post(new LinkEvent(CHANNELS_STORAGE.get(channel), socket));
             }
         } catch (IOException e) {
             Log.e(TAG, "Error write buffer to socket channel", e);
@@ -126,9 +116,7 @@ public class DataExchange implements Runnable {
                             String link = "http://".concat(SETTINGS.getAceStreamIP()).concat(":")
                                     .concat(String.valueOf(SETTINGS.getAceStreamOutVideoPort()))
                                     .concat(REGEX.parser("START\\shttp://[0-9.:]*(.*)\\s", response, 1));
-                            CHANNELS_STORAGE.put(channel, link);
-                            BusStation.getBus().post(new LinkEvent(link, socket));
-                            break;
+                            return link;
                         case AceStreamAPI.EVENT:
                             break;
                         case AceStreamAPI.NOTREADY:
