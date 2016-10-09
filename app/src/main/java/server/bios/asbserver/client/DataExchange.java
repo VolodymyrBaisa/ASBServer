@@ -52,7 +52,17 @@ public class DataExchange implements Runnable {
     @Override
     public void run() {
         try {
-            String channel = getChannelName();
+            clientSocket.sendData(AceStreamAPI.HELLO.concat("\r\n"));
+
+            String response = getResponse();
+            clientSocket.sendData(AceStreamAPI.READY_KEY.concat(ACE_STREAM_API.key(REGEX.parser("key=(.*?)\\s", response, 1))).concat("\r\n"));
+
+            clientSocket.sendData(ACE_STREAM_API.userdata(SETTINGS.getGender(), SETTINGS.getAge()).concat("\r\n"));
+            getResponse();
+
+            clientSocket.sendData(ACE_STREAM_API.loadasync(command, content).concat("\r\n"));
+
+            String channel = getResponse();
 
             if (!CHANNELS_STORAGE.contains(channel)) {
                 clientSocket.sendData(ACE_STREAM_API.start(command, content).concat("\r\n"));
@@ -83,20 +93,6 @@ public class DataExchange implements Runnable {
                 Log.e(TAG, "Error close socket channel", e);
             }
         }
-    }
-
-    private String getChannelName() throws IOException, NoSuchAlgorithmException {
-        clientSocket.sendData(AceStreamAPI.HELLO.concat("\r\n"));
-
-        String response = getResponse();
-        clientSocket.sendData(AceStreamAPI.READY_KEY.concat(ACE_STREAM_API.key(REGEX.parser("key=(.*?)\\s", response, 1))).concat("\r\n"));
-
-        clientSocket.sendData(ACE_STREAM_API.userdata(SETTINGS.getGender(), SETTINGS.getAge()).concat("\r\n"));
-        getResponse();
-
-        clientSocket.sendData(ACE_STREAM_API.loadasync(command, content).concat("\r\n"));
-
-        return getResponse();
     }
 
     private String getResponse() {

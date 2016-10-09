@@ -1,7 +1,6 @@
 package server.bios.asbserver.server;
 
 import android.os.SystemClock;
-import android.provider.ContactsContract;
 import android.util.Log;
 
 import org.greenrobot.eventbus.Subscribe;
@@ -17,6 +16,7 @@ import server.bios.asbserver.bus.LinkEvent;
 import server.bios.asbserver.bus.NotifMsgEvent;
 import server.bios.asbserver.client.DataExchange;
 import server.bios.asbserver.client.autostart.StartAceServer;
+import server.bios.asbserver.server._interface._Response;
 import server.bios.asbserver.server._interface._Socket;
 import server.bios.asbserver.settings.Settings;
 import server.bios.asbserver.utils.CharsetUtils;
@@ -32,12 +32,14 @@ public class Server {
     private static final Regex REGEX = Regex.getInstance();
     private static final int CONNECTION_TIMEOUT = 10;
     private static final int READ_TIMEOUT = 120;
+    private HttpResponse httpResponse;
     private ServerSocket serverSocket;
     private boolean isStop;
 
     public Server() {
         try {
             serverSocket = new ServerSocket(SETTINGS.getASBServerPort());
+            httpResponse = new HttpResponse(CONNECTION_TIMEOUT, READ_TIMEOUT);
             BusStation.getBus().register(this);
         } catch (IOException e) {
             Log.d(TAG, "Error bind to ASBServer", e);
@@ -103,22 +105,22 @@ public class Server {
     public void onEvent(LinkEvent event) {
         new Thread(() -> {
             _Socket socket = event.socket;
-            HttpResponse httpResponse = new HttpResponse(CONNECTION_TIMEOUT, READ_TIMEOUT);
+            _Response response = null;
             try {
                 URL url = new URL(event.link);
                 //Get the link from Ace Stream Server
-                httpResponse.setUrl(url);
+                response = httpResponse.getResponse(url);
 
-                String headers = httpResponse.sendHeaderResponce().toString();
+                String headers = response.getHeaderResponce().toString();
                 socket.sendData(CHARSET_UTILS.charsetEncoder(headers, "UTF-8"));
 
-                socket.sendData(CHARSET_UTILS.charsetEncoder(httpResponse.getString(), "UTF-8"));
+                socket.sendData(CHARSET_UTILS.charsetEncoder(response.getString(), "UTF-8"));
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
                 try {
                     if (socket != null) socket.close();
-                    if (httpResponse != null) httpResponse.close();
+                    if (response != null) response.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
