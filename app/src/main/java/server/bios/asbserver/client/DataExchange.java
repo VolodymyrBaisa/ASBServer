@@ -13,6 +13,7 @@ import server.bios.asbserver.bus.LinkEvent;
 import server.bios.asbserver.server._interface._Socket;
 import server.bios.asbserver.settings.Settings;
 import server.bios.asbserver.utils.Regex;
+import server.bios.asbserver.utils.Timer;
 
 /**
  * Created by BIOS on 9/11/2016.
@@ -23,6 +24,8 @@ public class DataExchange implements Runnable {
     private static final ChannelsStorage CHANNELS_STORAGE = ChannelsStorage.getInstance();
     private static final Regex REGEX = Regex.getInstance();
     private static final AceStreamAPI ACE_STREAM_API = AceStreamAPI.getInstance();
+    private static final int DURATION = 10;
+    private Timer timer;
     private ClientSocket clientSocket;
     private String command;
     private String content;
@@ -34,6 +37,7 @@ public class DataExchange implements Runnable {
         this.command = command;
         this.content = content;
         clientSocket = new ClientSocket(SETTINGS.getAceStreamIP(), SETTINGS.getAceStreamPort());
+        timer = new Timer(DURATION);
         BusStation.getBus().register(this);
     }
 
@@ -68,12 +72,13 @@ public class DataExchange implements Runnable {
                 clientSocket.sendData(ACE_STREAM_API.start(command, content).concat("\r\n"));
                 String link = getResponse();
                 CHANNELS_STORAGE.put(channel, link);
-                BusStation.getBus().post(new LinkEvent(link, socket));
+                BusStation.getBus().post(new LinkEvent(link, socket, timer));
                 getResponse();
 
                 CHANNELS_STORAGE.remove(channel);
             } else {
-                BusStation.getBus().post(new LinkEvent(CHANNELS_STORAGE.get(channel), socket));
+                    BusStation.getBus().post(new LinkEvent(CHANNELS_STORAGE.get(channel), socket, timer));
+                timer.reset();
             }
         } catch (IOException e) {
             Log.e(TAG, "Error write buffer to socket channel", e);
@@ -133,7 +138,7 @@ public class DataExchange implements Runnable {
                             return "";
                     }
                 }
-            } while (!isStop);
+            } while (!isStop || timer.isFinish());
         } catch (IOException e) {
             Log.e(TAG, "Error read buffer from socket channel", e);
         }
