@@ -25,7 +25,6 @@ public class DataExchange implements Runnable {
     private static final Regex REGEX = Regex.getInstance();
     private static final AceStreamAPI ACE_STREAM_API = AceStreamAPI.getInstance();
     private static final int DURATION = 10;
-    private Timer timer;
     private ClientSocket clientSocket;
     private String command;
     private String content;
@@ -37,7 +36,6 @@ public class DataExchange implements Runnable {
         this.command = command;
         this.content = content;
         clientSocket = new ClientSocket(SETTINGS.getAceStreamIP(), SETTINGS.getAceStreamPort());
-        timer = new Timer(DURATION);
         BusStation.getBus().register(this);
     }
 
@@ -70,15 +68,30 @@ public class DataExchange implements Runnable {
 
             if (!CHANNELS_STORAGE.contains(channel)) {
                 clientSocket.sendData(ACE_STREAM_API.start(command, content).concat("\r\n"));
+
+                Pair<String, Timer> pair = new Pair<>();
                 String link = getResponse();
-                CHANNELS_STORAGE.put(channel, link);
-                BusStation.getBus().post(new LinkEvent(link, socket, timer));
+                Timer timer = new Timer(DURATION);
+                pair.setFirst(link);
+                pair.setSecond(timer);
+                CHANNELS_STORAGE.put(channel, pair);
+
+                new Thread(() -> {
+                    BusStation.getBus().post(new LinkEvent(link, socket));
+                    timer.start();
+                }).start();
                 getResponse();
 
                 CHANNELS_STORAGE.remove(channel);
             } else {
-                    BusStation.getBus().post(new LinkEvent(CHANNELS_STORAGE.get(channel), socket, timer));
-                timer.reset();
+                Pair<String, Timer> pair = CHANNELS_STORAGE.get(channel);
+                String link = pair.getFirst();
+                Timer timer = pair.getSecond();
+
+                new Thread(() -> {
+                    BusStation.getBus().post(new LinkEvent(link, socket));
+                    timer.reset();
+                }).start();
             }
         } catch (IOException e) {
             Log.e(TAG, "Error write buffer to socket channel", e);
@@ -138,7 +151,7 @@ public class DataExchange implements Runnable {
                             return "";
                     }
                 }
-            } while (!isStop || timer.isFinish());
+            } while (!isStop);
         } catch (IOException e) {
             Log.e(TAG, "Error read buffer from socket channel", e);
         }

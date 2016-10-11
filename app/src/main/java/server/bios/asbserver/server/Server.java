@@ -21,7 +21,6 @@ import server.bios.asbserver.server._interface._Socket;
 import server.bios.asbserver.settings.Settings;
 import server.bios.asbserver.utils.CharsetUtils;
 import server.bios.asbserver.utils.Regex;
-import server.bios.asbserver.utils.Timer;
 
 /**
  * Created by BIOS on 9/14/2016.
@@ -104,30 +103,26 @@ public class Server {
 
     @Subscribe
     public void onEvent(LinkEvent event) {
-        new Thread(() -> {
-            Timer timer = event.timer;
-            _Socket socket = event.socket;
-            _Response response = null;
+        _Socket socket = event.socket;
+        _Response response = null;
+        try {
+            URL url = new URL(event.link);
+            //Get the link from Ace Stream Server
+            response = httpResponse.getResponse(url);
+
+            String headers = response.getHeaderResponce().toString();
+            socket.sendData(CHARSET_UTILS.charsetEncoder(headers, "UTF-8"));
+
+            socket.sendData(CHARSET_UTILS.charsetEncoder(response.getString(), "UTF-8"));
+        } catch (IOException e) {
+            Log.e(TAG, "Error write to socket channel", e);
+        } finally {
             try {
-                URL url = new URL(event.link);
-                //Get the link from Ace Stream Server
-                response = httpResponse.getResponse(url);
-
-                String headers = response.getHeaderResponce().toString();
-                socket.sendData(CHARSET_UTILS.charsetEncoder(headers, "UTF-8"));
-
-                socket.sendData(CHARSET_UTILS.charsetEncoder(response.getString(), "UTF-8"));
-                timer.start();
+                if (socket != null) socket.close();
+                if (response != null) response.close();
             } catch (IOException e) {
-                Log.e(TAG, "Error write to socket channel", e);
-            } finally {
-                try {
-                    if (socket != null) socket.close();
-                    if (response != null) response.close();
-                } catch (IOException e) {
-                    Log.e(TAG, "Error close socket channel", e);
-                }
+                Log.e(TAG, "Error close socket channel", e);
             }
-        }).start();
+        }
     }
 }

@@ -1,8 +1,7 @@
 package server.bios.asbserver.utils;
 
 public class Timer {
-	private long startTime = 0;
-	private volatile boolean isStart = true;
+	private volatile long startTime = 0;
 	private int duration = 0;
 
 	public Timer (int duration){
@@ -10,19 +9,16 @@ public class Timer {
 	}
 	  
 	  public void start(){
-		  if(isStart){
 		  startTime = System.currentTimeMillis();
-		  isStart = false;
-		  }
 	  }
 
 	  public boolean isFinish()
 	  {
+		  System.out.println((System.currentTimeMillis() - startTime)/1000);
 		  return ((System.currentTimeMillis() - startTime)/1000) > duration;
 	  }
 	  
 	  public void reset(){
 		  startTime = System.currentTimeMillis();
-		  isStart = true;
 	  }
 }
