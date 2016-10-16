@@ -54,7 +54,7 @@ public class ClientSocket {
         if (socketChannel == null) throw new NullPointerException("socketChannel == null");
         socketChannel.read(getBuffer);
         getBuffer.flip();
-        String chars = CHARSET_UTILS.charsetDecoder(getBuffer, "US-ASCII");
+        String chars = CHARSET_UTILS.charsetDecoder(getBuffer, "UTF-8");
         getBuffer.clear();
         return chars;
     }

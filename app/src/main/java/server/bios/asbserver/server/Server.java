@@ -5,10 +5,14 @@ import android.util.Log;
 
 import org.greenrobot.eventbus.Subscribe;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 
 import server.bios.asbserver.bus.BusStation;
 import server.bios.asbserver.bus.CloseEvent;
@@ -56,7 +60,7 @@ public class Server {
                 String header = CHARSET_UTILS.charsetDecoder(socket.getData(), "UTF-8");
 
                 if (!header.isEmpty()) {
-                    String command = header.matches(".*http://.*.acelive.*") ? "torrent" : "pid";
+                    String command = header.matches(".*https?://.*.(acelive|torrent)(.*\\r\\n)*") ? "torrent" : "pid";
                     String content = null;
                     try {
                         content = URLDecoder.decode(REGEX.parser("/(.*?)\\sH.*", header, 1), "UTF-8");
@@ -105,19 +109,34 @@ public class Server {
     public void onEvent(LinkEvent event) {
         _Socket socket = event.socket;
         _Response response = null;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(0xfffff);
+        ReadableByteChannel readableByteChannel = null;
         try {
-            URL url = new URL(event.link);
-            //Get the link from Ace Stream Server
-            response = httpResponse.getResponse(url);
+            String link = event.link;
+            if (!link.isEmpty()) {
+                URL url = new URL(link);
+                //Get the link from Ace Stream Server
+                response = httpResponse.getResponse(url);
 
-            String headers = response.getHeaderResponce().toString();
-            socket.sendData(CHARSET_UTILS.charsetEncoder(headers, "UTF-8"));
+                String headers = response.getHeaderResponce().toString();
+                socket.sendData(CHARSET_UTILS.charsetEncoder(headers, "UTF-8"));
+                BufferedInputStream bufferedInputStream = new BufferedInputStream(response.byteStream());
+                readableByteChannel = Channels.newChannel(bufferedInputStream);
+                while (readableByteChannel.read(byteBuffer) > -1) {
+                    byteBuffer.flip();
+                    socket.sendData(byteBuffer);
+                    byteBuffer.clear();
+                }
 
-            socket.sendData(CHARSET_UTILS.charsetEncoder(response.getString(), "UTF-8"));
+                    socket.sendData(byteBuffer);
+                System.out.println("end");
+            }
+
         } catch (IOException e) {
-            Log.e(TAG, "Error write to socket channel", e);
+            // Log.e(TAG, "Error write to socket channel", e);
         } finally {
             try {
+                if (readableByteChannel != null) readableByteChannel.close();
                 if (socket != null) socket.close();
                 if (response != null) response.close();
             } catch (IOException e) {

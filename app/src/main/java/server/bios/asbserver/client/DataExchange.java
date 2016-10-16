@@ -13,7 +13,6 @@ import server.bios.asbserver.bus.LinkEvent;
 import server.bios.asbserver.server._interface._Socket;
 import server.bios.asbserver.settings.Settings;
 import server.bios.asbserver.utils.Regex;
-import server.bios.asbserver.utils.Timer;
 
 /**
  * Created by BIOS on 9/11/2016.
@@ -69,28 +68,20 @@ public class DataExchange implements Runnable {
             if (!CHANNELS_STORAGE.contains(channel)) {
                 clientSocket.sendData(ACE_STREAM_API.start(command, content).concat("\r\n"));
 
-                Pair<String, Timer> pair = new Pair<>();
                 String link = getResponse();
-                Timer timer = new Timer(DURATION);
-                pair.setFirst(link);
-                pair.setSecond(timer);
-                CHANNELS_STORAGE.put(channel, pair);
+                CHANNELS_STORAGE.put(channel, link);
 
                 new Thread(() -> {
                     BusStation.getBus().post(new LinkEvent(link, socket));
-                    timer.start();
                 }).start();
                 getResponse();
 
                 CHANNELS_STORAGE.remove(channel);
             } else {
-                Pair<String, Timer> pair = CHANNELS_STORAGE.get(channel);
-                String link = pair.getFirst();
-                Timer timer = pair.getSecond();
+                String link = CHANNELS_STORAGE.get(channel);
 
                 new Thread(() -> {
                     BusStation.getBus().post(new LinkEvent(link, socket));
-                    timer.reset();
                 }).start();
             }
         } catch (IOException e) {
@@ -107,6 +98,8 @@ public class DataExchange implements Runnable {
                 getResponse();
                 clientSocket.close();
                 BusStation.getBus().unregister(this);
+
+                Log.d(TAG, "SHUTDOWN");
             } catch (IOException e) {
                 Log.e(TAG, "Error close socket channel", e);
             }
@@ -127,9 +120,22 @@ public class DataExchange implements Runnable {
                         case AceStreamAPI.LOADRESP:
                             return REGEX.parser("\\[\\[\"(.*)\".*\\]\\]", response, 1);
                         case AceStreamAPI.START:
-                            String link = "http://".concat(SETTINGS.getAceStreamIP()).concat(":")
+                            String link;
+                            switch (command.toLowerCase()) {
+                                case "pid":
+                                    link = REGEX.parser("START\\shttps?://[0-9.:]*(.*)\\s", response, 1);
+                                    break;
+                                case "torrent":
+                                    link = REGEX.parser("START\\shttps?://[0-9.:]*(.*)$", response, 1);
+                                    break;
+                                default:
+                                    link = "";
+                                    break;
+                            }
+
+                            link = "http://".concat(SETTINGS.getAceStreamIP()).concat(":")
                                     .concat(String.valueOf(SETTINGS.getAceStreamOutVideoPort()))
-                                    .concat(REGEX.parser("START\\shttp://[0-9.:]*(.*)\\s", response, 1));
+                                    .concat(link);
                             return link;
                         case AceStreamAPI.EVENT:
                             break;

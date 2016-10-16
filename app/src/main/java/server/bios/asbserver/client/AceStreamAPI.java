@@ -76,7 +76,7 @@ public final class AceStreamAPI {
     }
 
     private int random() {
-        int min = 0;
+        int min = 500;
         int max = 1000;
         Random random = new Random();
         return random.nextInt(max - min + 1) + min;

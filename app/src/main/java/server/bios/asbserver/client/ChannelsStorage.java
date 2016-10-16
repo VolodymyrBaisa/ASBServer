@@ -1,18 +1,15 @@
 package server.bios.asbserver.client;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
-import server.bios.asbserver.utils.Timer;
 
 /**
  * Created by BIOS on 10/1/2016.
  */
 
 public class ChannelsStorage {
-    private Map<String, Pair> storage;
+    private Map<String, String> storage;
     private volatile static ChannelsStorage channelsStorage;
 
     private ChannelsStorage() {
@@ -33,15 +30,15 @@ public class ChannelsStorage {
         return storage.containsKey(channel);
     }
 
-    public void put(String channel, Pair<String, Timer> pair) {
-        storage.put(channel, pair);
+    public void put(String channel, String link) {
+        storage.put(channel, link);
     }
 
-    public Pair<String, Timer> get(String channel) {
+    public String get(String channel) {
         return storage.get(channel);
     }
 
-    public Set<Map.Entry<String, Pair>> iterator() {
+    public Set<Map.Entry<String, String>> iterator() {
         return storage.entrySet();
     }
 

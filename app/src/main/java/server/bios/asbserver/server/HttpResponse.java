@@ -53,6 +53,11 @@ public class HttpResponse {
                     .concat(String.valueOf(response.code())).concat(" ")
                     .concat(response.message()).concat("\r\n"));
 
+                      response = response.newBuilder()
+                     .removeHeader("connection")
+                     .addHeader("connection", "close")
+                     .build();
+
             Map<String, List<String>> headers = response.headers().toMultimap();
             for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
                 String key = entry.getKey();
