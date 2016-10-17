@@ -68,20 +68,33 @@ public class DataExchange implements Runnable {
             if (!CHANNELS_STORAGE.contains(channel)) {
                 clientSocket.sendData(ACE_STREAM_API.start(command, content).concat("\r\n"));
 
+                Pair<String, Boolean> pair = new Pair<>();
                 String link = getResponse();
-                CHANNELS_STORAGE.put(channel, link);
+                pair.setFirst(link);
+                pair.setSecond(true);
+                CHANNELS_STORAGE.put(channel, pair);
 
                 new Thread(() -> {
+                    System.out.println(CHANNELS_STORAGE.get(channel).getSecond().toString() + "1");
                     BusStation.getBus().post(new LinkEvent(link, socket));
+                    pair.setSecond(false);
+                    CHANNELS_STORAGE.put(channel, pair);
+                    System.out.println(CHANNELS_STORAGE.get(channel).getSecond().toString() + "1");
                 }).start();
                 getResponse();
 
                 CHANNELS_STORAGE.remove(channel);
             } else {
-                String link = CHANNELS_STORAGE.get(channel);
-
+                Pair<String, Boolean> pair = CHANNELS_STORAGE.get(channel);
+                String link = pair.getFirst();
+                pair.setSecond(true);
+                CHANNELS_STORAGE.put(channel, pair);
+                System.out.println(CHANNELS_STORAGE.get(channel).getSecond().toString() + "2");
                 new Thread(() -> {
                     BusStation.getBus().post(new LinkEvent(link, socket));
+                    pair.setSecond(false);
+                    CHANNELS_STORAGE.put(channel, pair);
+                    System.out.println(CHANNELS_STORAGE.get(channel).getSecond().toString() + "2");
                 }).start();
             }
         } catch (IOException e) {
@@ -132,7 +145,6 @@ public class DataExchange implements Runnable {
                                     link = "";
                                     break;
                             }
-
                             link = "http://".concat(SETTINGS.getAceStreamIP()).concat(":")
                                     .concat(String.valueOf(SETTINGS.getAceStreamOutVideoPort()))
                                     .concat(link);

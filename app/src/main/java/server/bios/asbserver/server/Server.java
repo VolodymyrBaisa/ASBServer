@@ -109,7 +109,7 @@ public class Server {
     public void onEvent(LinkEvent event) {
         _Socket socket = event.socket;
         _Response response = null;
-        ByteBuffer byteBuffer = ByteBuffer.allocate(0xfffff);
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(0xfffff);
         ReadableByteChannel readableByteChannel = null;
         try {
             String link = event.link;
@@ -128,6 +128,7 @@ public class Server {
                     byteBuffer.clear();
                 }
 
+                System.out.println("start");
                     socket.sendData(byteBuffer);
                 System.out.println("end");
             }

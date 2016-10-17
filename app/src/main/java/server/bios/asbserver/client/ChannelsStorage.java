@@ -9,7 +9,7 @@ import java.util.Set;
  */
 
 public class ChannelsStorage {
-    private Map<String, String> storage;
+    private Map<String, Pair> storage;
     private volatile static ChannelsStorage channelsStorage;
 
     private ChannelsStorage() {
@@ -30,15 +30,15 @@ public class ChannelsStorage {
         return storage.containsKey(channel);
     }
 
-    public void put(String channel, String link) {
-        storage.put(channel, link);
+    public void put(String channel, Pair<String, Boolean> pair) {
+        storage.put(channel, pair);
     }
 
-    public String get(String channel) {
+    public Pair<String, Boolean> get(String channel) {
         return storage.get(channel);
     }
 
-    public Set<Map.Entry<String, String>> iterator() {
+    public Set<Map.Entry<String, Pair>> iterator() {
         return storage.entrySet();
     }
 
