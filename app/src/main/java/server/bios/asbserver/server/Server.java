@@ -109,7 +109,7 @@ public class Server {
     public void onEvent(LinkEvent event) {
         _Socket socket = event.socket;
         _Response response = null;
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(0xfffff);
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(0xfff);
         ReadableByteChannel readableByteChannel = null;
         try {
             String link = event.link;
@@ -124,13 +124,13 @@ public class Server {
                 readableByteChannel = Channels.newChannel(bufferedInputStream);
                 while (readableByteChannel.read(byteBuffer) > -1) {
                     byteBuffer.flip();
-                    socket.sendData(byteBuffer);
+                    while(byteBuffer.hasRemaining()) {
+                        socket.sendData(byteBuffer);
+                    }
                     byteBuffer.clear();
                 }
 
-                System.out.println("start");
-                    socket.sendData(byteBuffer);
-                System.out.println("end");
+                socket.getData();
             }
 
         } catch (IOException e) {
