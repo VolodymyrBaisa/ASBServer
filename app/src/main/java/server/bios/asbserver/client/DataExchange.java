@@ -81,6 +81,7 @@ public class DataExchange implements Runnable {
                     CHANNELS_STORAGE.put(channel, pair);
                     System.out.println(CHANNELS_STORAGE.get(channel).getSecond().toString() + "1");
                 }).start();
+
                 getResponse();
 
                 CHANNELS_STORAGE.remove(channel);
@@ -133,18 +134,7 @@ public class DataExchange implements Runnable {
                         case AceStreamAPI.LOADRESP:
                             return REGEX.parser("\\[\\[\"(.*)\".*\\]\\]", response, 1);
                         case AceStreamAPI.START:
-                            String link;
-                            switch (command.toLowerCase()) {
-                                case "pid":
-                                    link = REGEX.parser("START\\shttps?://[0-9.:]*(.*)\\s", response, 1);
-                                    break;
-                                case "torrent":
-                                    link = REGEX.parser("START\\shttps?://[0-9.:]*(.*)$", response, 1);
-                                    break;
-                                default:
-                                    link = "";
-                                    break;
-                            }
+                            String link = REGEX.parser("START\\\\shttp://[0-9.:]*(.*(m3u8|[0-9].[0-9]*$))", response, 1);
                             link = "http://".concat(SETTINGS.getAceStreamIP()).concat(":")
                                     .concat(String.valueOf(SETTINGS.getAceStreamOutVideoPort()))
                                     .concat(link);

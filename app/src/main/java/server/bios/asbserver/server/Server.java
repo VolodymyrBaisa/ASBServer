@@ -130,7 +130,7 @@ public class Server {
                     byteBuffer.clear();
                 }
 
-                socket.getData();
+              //  socket.getData();
             }
 
         } catch (IOException e) {
