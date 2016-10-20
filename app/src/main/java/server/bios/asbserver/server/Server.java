@@ -31,9 +31,9 @@ import server.bios.asbserver.utils.Regex;
  */
 public class Server {
     private static final String TAG = Server.class.getName();
-    private static final Settings SETTINGS = Settings.getInstance();
-    private static final CharsetUtils CHARSET_UTILS = CharsetUtils.getInstance();
-    private static final Regex REGEX = Regex.getInstance();
+    private static Settings settings = Settings.getInstance();
+    private static CharsetUtils charsetUtils = CharsetUtils.getInstance();
+    private static Regex regex = Regex.getInstance();
     private static final int CONNECTION_TIMEOUT = 10;
     private static final int READ_TIMEOUT = 120;
     private HttpResponse httpResponse;
@@ -42,7 +42,7 @@ public class Server {
 
     public Server() {
         try {
-            serverSocket = new ServerSocket(SETTINGS.getASBServerPort());
+            serverSocket = new ServerSocket(settings.getASBServerPort());
             httpResponse = new HttpResponse(CONNECTION_TIMEOUT, READ_TIMEOUT);
             BusStation.getBus().register(this);
         } catch (IOException e) {
@@ -57,13 +57,13 @@ public class Server {
                 _Socket socket = serverSocket.accept();
 
                 if (isStop) break;
-                String header = CHARSET_UTILS.charsetDecoder(socket.getData(), "UTF-8");
+                String header = charsetUtils.charsetDecoder(socket.getData(), "UTF-8");
 
                 if (!header.isEmpty()) {
                     String command = header.matches("(?s).*(acelive|torrent).*") ? "torrent" : "pid";
                     String content = null;
                     try {
-                        content = URLDecoder.decode(REGEX.parser("/(.*?)\\sH.*", header, 1), "UTF-8");
+                        content = URLDecoder.decode(regex.parser("/(.*?)\\sH.*", header, 1), "UTF-8");
                     } catch (UnsupportedEncodingException e) {
                         Log.e(TAG, "The Character Encoding is not supported", e);
                     }
@@ -119,7 +119,7 @@ public class Server {
                 response = httpResponse.getResponse(url);
 
                 String headers = response.getHeaderResponce().toString();
-                socket.sendData(CHARSET_UTILS.charsetEncoder(headers, "UTF-8"));
+                socket.sendData(charsetUtils.charsetEncoder(headers, "UTF-8"));
                 BufferedInputStream bufferedInputStream = new BufferedInputStream(response.byteStream());
                 readableByteChannel = Channels.newChannel(bufferedInputStream);
                 while (readableByteChannel.read(byteBuffer) > -1) {

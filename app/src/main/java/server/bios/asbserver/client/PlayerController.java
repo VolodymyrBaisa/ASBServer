@@ -2,24 +2,23 @@ package server.bios.asbserver.client;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by BIOS on 10/1/2016.
  */
 
-public class ChannelsStorage {
-    private Map<String, String> storage;
-    private volatile static ChannelsStorage channelsStorage;
+public class PlayerController {
+    private Map<String, Integer> storage;
+    private volatile static PlayerController channelsStorage;
 
-    private ChannelsStorage() {
+    private PlayerController() {
         storage = new HashMap<>();
     }
 
-    public static ChannelsStorage getInstance() {
+    public static PlayerController getInstance() {
         if (channelsStorage == null) {
-            synchronized (ChannelsStorage.class) {
-                channelsStorage = new ChannelsStorage();
+            synchronized (PlayerController.class) {
+                channelsStorage = new PlayerController();
                 return channelsStorage;
             }
         }
@@ -30,11 +29,11 @@ public class ChannelsStorage {
         return storage.containsKey(channel);
     }
 
-    public void put(String channel, String link) {
-        storage.put(channel, link);
+    public void put(String channel, Integer count) {
+        storage.put(channel, count);
     }
 
-    public String get(String channel) {
+    public Integer get(String channel) {
         return storage.get(channel);
     }
 

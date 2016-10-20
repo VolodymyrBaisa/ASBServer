@@ -19,10 +19,11 @@ import server.bios.asbserver.utils.Regex;
  */
 public class DataExchange implements Runnable {
     private static final String TAG = DataExchange.class.getName();
-    private static final Settings SETTINGS = Settings.getInstance();
-    private static final ChannelsStorage CHANNELS_STORAGE = ChannelsStorage.getInstance();
-    private static final Regex REGEX = Regex.getInstance();
-    private static final AceStreamAPI ACE_STREAM_API = AceStreamAPI.getInstance();
+    private static Settings settings = Settings.getInstance();
+    private static ChannelsStorage channelsStorage = ChannelsStorage.getInstance();
+    private static PlayerController playerController = PlayerController.getInstance();
+    private static Regex regex = Regex.getInstance();
+    private static AceStreamAPI aceStreamAPI = AceStreamAPI.getInstance();
     private ClientSocket clientSocket;
     private String command;
     private String content;
@@ -33,7 +34,7 @@ public class DataExchange implements Runnable {
         this.socket = socket;
         this.command = command;
         this.content = content;
-        clientSocket = new ClientSocket(SETTINGS.getAceStreamIP(), SETTINGS.getAceStreamPort());
+        clientSocket = new ClientSocket(settings.getAceStreamIP(), settings.getAceStreamPort());
         BusStation.getBus().register(this);
     }
 
@@ -55,20 +56,20 @@ public class DataExchange implements Runnable {
             clientSocket.sendData(AceStreamAPI.HELLO.concat("\r\n"));
 
             String response = getResponse();
-            clientSocket.sendData(AceStreamAPI.READY_KEY.concat(ACE_STREAM_API.key(REGEX.parser("key=(.*?)\\s", response, 1))).concat("\r\n"));
+            clientSocket.sendData(AceStreamAPI.READY_KEY.concat(aceStreamAPI.key(regex.parser("key=(.*?)\\s", response, 1))).concat("\r\n"));
 
-            clientSocket.sendData(ACE_STREAM_API.userdata(SETTINGS.getGender(), SETTINGS.getAge()).concat("\r\n"));
+            clientSocket.sendData(aceStreamAPI.userdata(settings.getGender(), settings.getAge()).concat("\r\n"));
             getResponse();
 
-            clientSocket.sendData(ACE_STREAM_API.loadasync(command, content).concat("\r\n"));
+            clientSocket.sendData(aceStreamAPI.loadasync(command, content).concat("\r\n"));
 
             String channel = getResponse();
 
-            if (!CHANNELS_STORAGE.contains(channel)) {
-                clientSocket.sendData(ACE_STREAM_API.start(command, content).concat("\r\n"));
+            if (!channelsStorage.contains(channel)) {
+                clientSocket.sendData(aceStreamAPI.start(command, content).concat("\r\n"));
 
                 String link = getResponse();
-                CHANNELS_STORAGE.put(channel, link);
+                channelsStorage.put(channel, link);
 
                 new Thread(() -> {
                     System.out.println("1");
@@ -78,9 +79,9 @@ public class DataExchange implements Runnable {
 
                 getResponse();
 
-                CHANNELS_STORAGE.remove(channel);
+                channelsStorage.remove(channel);
             } else {
-                String link = CHANNELS_STORAGE.get(channel);
+                String link = channelsStorage.get(channel);
                 new Thread(() -> {
                     System.out.println("2");
                     BusStation.getBus().post(new LinkEvent(link, socket));
@@ -115,17 +116,17 @@ public class DataExchange implements Runnable {
                 String[] lines = clientSocket.getData().split("\r\n");
                 for (String response : lines) {
                     Log.d(TAG, response);
-                    String responseAPI = REGEX.parser("\\w+(?=\\s|$)", response);
+                    String responseAPI = regex.parser("\\w+(?=\\s|$)", response);
                     switch (responseAPI) {
                         case AceStreamAPI.HELLOTS:
                         case AceStreamAPI.AUTH:
                             return response;
                         case AceStreamAPI.LOADRESP:
-                            return REGEX.parser("\\[\\[\"(.*)\".*\\]\\]", response, 1);
+                            return regex.parser("\\[\\[\"(.*)\".*\\]\\]", response, 1);
                         case AceStreamAPI.START:
-                            String link = REGEX.parser("START\\shttp://[0-9.:]*(.*(m3u8|[0-9].[0-9]*$))", response, 1);
-                            link = "http://".concat(SETTINGS.getAceStreamIP()).concat(":")
-                                    .concat(String.valueOf(SETTINGS.getAceStreamOutVideoPort()))
+                            String link = regex.parser("START\\shttp://[0-9.:]*(.*(m3u8|[0-9].[0-9]*$))", response, 1);
+                            link = "http://".concat(settings.getAceStreamIP()).concat(":")
+                                    .concat(String.valueOf(settings.getAceStreamOutVideoPort()))
                                     .concat(link);
                             return link;
                         case AceStreamAPI.EVENT:

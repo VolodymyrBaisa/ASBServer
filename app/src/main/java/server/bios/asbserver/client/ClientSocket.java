@@ -15,7 +15,7 @@ import server.bios.asbserver.utils.CharsetUtils;
  */
 public class ClientSocket {
     private static final String TAG = ClientSocket.class.getName();
-    private static final CharsetUtils CHARSET_UTILS = CharsetUtils.getInstance();
+    private static CharsetUtils charsetUtils = CharsetUtils.getInstance();
     private SocketChannel socketChannel;
     private static final int BUFFER_SIZE = 0x800;
     private ByteBuffer getBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
@@ -54,7 +54,7 @@ public class ClientSocket {
         if (socketChannel == null) throw new NullPointerException("socketChannel == null");
         socketChannel.read(getBuffer);
         getBuffer.flip();
-        String chars = CHARSET_UTILS.charsetDecoder(getBuffer, "UTF-8");
+        String chars = charsetUtils.charsetDecoder(getBuffer, "UTF-8");
         getBuffer.clear();
         return chars;
     }
