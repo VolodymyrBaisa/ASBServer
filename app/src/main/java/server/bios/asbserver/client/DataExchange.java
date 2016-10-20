@@ -25,6 +25,7 @@ public class DataExchange implements Runnable {
     private static Regex regex = Regex.getInstance();
     private static AceStreamAPI aceStreamAPI = AceStreamAPI.getInstance();
     private ClientSocket clientSocket;
+    private String channel;
     private String command;
     private String content;
     private _Socket socket;
@@ -63,29 +64,35 @@ public class DataExchange implements Runnable {
 
             clientSocket.sendData(aceStreamAPI.loadasync(command, content).concat("\r\n"));
 
-            String channel = getResponse();
+            channel = getResponse();
 
             if (!channelsStorage.contains(channel)) {
                 clientSocket.sendData(aceStreamAPI.start(command, content).concat("\r\n"));
 
                 String link = getResponse();
                 channelsStorage.put(channel, link);
+                playerController.put(channel, 0);
 
                 new Thread(() -> {
-                    System.out.println("1");
+                    System.out.println("Start-1======================================");
+                    playerController.put(channel, playerController.get(channel) + 1);
                     BusStation.getBus().post(new LinkEvent(link, socket));
-                    System.out.println("1");
+                    playerController.put(channel, playerController.get(channel) - 1);
+                    System.out.println("Stop-1======================================");
                 }).start();
 
                 getResponse();
 
                 channelsStorage.remove(channel);
+                playerController.remove(channel);
             } else {
                 String link = channelsStorage.get(channel);
                 new Thread(() -> {
-                    System.out.println("2");
+                    System.out.println("Start-2======================================");
+                    playerController.put(channel, playerController.get(channel) + 1);
                     BusStation.getBus().post(new LinkEvent(link, socket));
-                    System.out.println("2");
+                    playerController.put(channel, playerController.get(channel) - 1);
+                    System.out.println("Stop-2 ======================================");
                 }).start();
             }
         } catch (IOException e) {
@@ -149,11 +156,24 @@ public class DataExchange implements Runnable {
                             return "";
                     }
                 }
+
+                    System.out.println(isStop(channel));
+isStop = isStop(channel);
             } while (!isStop);
         } catch (IOException e) {
             Log.e(TAG, "Error read buffer from socket channel", e);
         }
         return "";
+    }
+
+    private boolean isStop(String channel){
+        if(channel != null && !channel.isEmpty() && playerController.get(channel) != null) {
+            if (playerController.get(channel) == 0) {
+                return true;
+            }
+            return false;
+        }
+        return false;
     }
 
     @Subscribe
