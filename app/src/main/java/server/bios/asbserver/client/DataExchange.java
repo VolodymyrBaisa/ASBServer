@@ -23,7 +23,6 @@ public class DataExchange implements Runnable {
     private static final ChannelsStorage CHANNELS_STORAGE = ChannelsStorage.getInstance();
     private static final Regex REGEX = Regex.getInstance();
     private static final AceStreamAPI ACE_STREAM_API = AceStreamAPI.getInstance();
-    private static final int DURATION = 10;
     private ClientSocket clientSocket;
     private String command;
     private String content;
@@ -68,34 +67,24 @@ public class DataExchange implements Runnable {
             if (!CHANNELS_STORAGE.contains(channel)) {
                 clientSocket.sendData(ACE_STREAM_API.start(command, content).concat("\r\n"));
 
-                Pair<String, Boolean> pair = new Pair<>();
                 String link = getResponse();
-                pair.setFirst(link);
-                pair.setSecond(true);
-                CHANNELS_STORAGE.put(channel, pair);
+                CHANNELS_STORAGE.put(channel, link);
 
                 new Thread(() -> {
-                    System.out.println(CHANNELS_STORAGE.get(channel).getSecond().toString() + "1");
+                    System.out.println("1");
                     BusStation.getBus().post(new LinkEvent(link, socket));
-                    pair.setSecond(false);
-                    CHANNELS_STORAGE.put(channel, pair);
-                    System.out.println(CHANNELS_STORAGE.get(channel).getSecond().toString() + "1");
+                    System.out.println("1");
                 }).start();
 
                 getResponse();
 
                 CHANNELS_STORAGE.remove(channel);
             } else {
-                Pair<String, Boolean> pair = CHANNELS_STORAGE.get(channel);
-                String link = pair.getFirst();
-                pair.setSecond(true);
-                CHANNELS_STORAGE.put(channel, pair);
-                System.out.println(CHANNELS_STORAGE.get(channel).getSecond().toString() + "2");
+                String link = CHANNELS_STORAGE.get(channel);
                 new Thread(() -> {
+                    System.out.println("2");
                     BusStation.getBus().post(new LinkEvent(link, socket));
-                    pair.setSecond(false);
-                    CHANNELS_STORAGE.put(channel, pair);
-                    System.out.println(CHANNELS_STORAGE.get(channel).getSecond().toString() + "2");
+                    System.out.println("2");
                 }).start();
             }
         } catch (IOException e) {
@@ -134,7 +123,7 @@ public class DataExchange implements Runnable {
                         case AceStreamAPI.LOADRESP:
                             return REGEX.parser("\\[\\[\"(.*)\".*\\]\\]", response, 1);
                         case AceStreamAPI.START:
-                            String link = REGEX.parser("START\\\\shttp://[0-9.:]*(.*(m3u8|[0-9].[0-9]*$))", response, 1);
+                            String link = REGEX.parser("START\\shttp://[0-9.:]*(.*(m3u8|[0-9].[0-9]*$))", response, 1);
                             link = "http://".concat(SETTINGS.getAceStreamIP()).concat(":")
                                     .concat(String.valueOf(SETTINGS.getAceStreamOutVideoPort()))
                                     .concat(link);

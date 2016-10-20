@@ -60,7 +60,7 @@ public class Server {
                 String header = CHARSET_UTILS.charsetDecoder(socket.getData(), "UTF-8");
 
                 if (!header.isEmpty()) {
-                    String command = header.matches(".*https?://.*.(acelive|torrent)(.*\\r\\n)*") ? "torrent" : "pid";
+                    String command = header.matches("(?s).*(acelive|torrent).*") ? "torrent" : "pid";
                     String content = null;
                     try {
                         content = URLDecoder.decode(REGEX.parser("/(.*?)\\sH.*", header, 1), "UTF-8");
@@ -130,7 +130,7 @@ public class Server {
                     byteBuffer.clear();
                 }
 
-              //  socket.getData();
+                socket.getData();
             }
 
         } catch (IOException e) {
