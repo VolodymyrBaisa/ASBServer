@@ -1,6 +1,6 @@
 package server.bios.asbserver.server;
 
-import android.os.SystemClock;
+import android.content.pm.PackageManager;
 import android.util.Log;
 
 import org.greenrobot.eventbus.Subscribe;
@@ -34,6 +34,7 @@ public class Server {
     private static Settings settings = Settings.getInstance();
     private static CharsetUtils charsetUtils = CharsetUtils.getInstance();
     private static Regex regex = Regex.getInstance();
+    private static StartAceServer startAceServer = StartAceServer.getInstance();
     private static final int CONNECTION_TIMEOUT = 10;
     private static final int READ_TIMEOUT = 120;
     private HttpResponse httpResponse;
@@ -52,57 +53,63 @@ public class Server {
 
     public void start() {
         BusStation.getBus().post(new NotifMsgEvent("Start"));
-        try {
-            while (true) {
-                _Socket socket = serverSocket.accept();
+        if (startAceServer()) {
+            BusStation.getBus().post(new NotifMsgEvent("Running"));
+            try {
+                while (!isStop) {
+                    _Socket socket = serverSocket.accept();
 
-                if (isStop) break;
-                String header = charsetUtils.charsetDecoder(socket.getData(), "UTF-8");
+                    String header = charsetUtils.charsetDecoder(socket.getData(), "UTF-8");
 
-                if (!header.isEmpty()) {
-                    String command = header.matches("(?s).*(acelive|torrent).*") ? "torrent" : "pid";
-                    String content = null;
-                    try {
-                        content = URLDecoder.decode(regex.parser("/(.*?)\\sH.*", header, 1), "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        Log.e(TAG, "The Character Encoding is not supported", e);
-                    }
+                    if (!header.isEmpty()) {
+                        String command = header.matches("(?s).*(acelive|torrent).*") ? "torrent" : "pid";
+                        String content = null;
+                        try {
+                            content = URLDecoder.decode(regex.parser("/(.*?)\\sH.*", header, 1), "UTF-8");
+                        } catch (UnsupportedEncodingException e) {
+                            Log.e(TAG, "The Character Encoding is not supported", e);
+                        }
 
-                    if (!command.isEmpty() && (content != null && !content.isEmpty())) {
-                        DataExchange dataExchange = new DataExchange(socket, command, content);
+                        if (!command.isEmpty() && (content != null && !content.isEmpty())) {
+                            DataExchange dataExchange = new DataExchange(socket, command, content);
 
-                        boolean isConnected;
-
-                        do {
                             dataExchange.connect();
-                            isConnected = dataExchange.isConnected();
-                            if (isConnected) {
-                                BusStation.getBus().post(new NotifMsgEvent("Running"));
+                            if (dataExchange.isConnected()) {
+
                                 new Thread(dataExchange).start();
                             } else {
-                                StartAceServer startAceServer = StartAceServer.getInstance();
-                                startAceServer.start();
-
-                                SystemClock.sleep(5000);
-
                                 Log.d(TAG, "Tray connection...");
                             }
-                        } while (!isStop && !isConnected);
+                        }
                     }
                 }
+            } catch (IOException e) {
+                Log.e(TAG, "Error connecting or read to socket channel", e);
+                BusStation.getBus().post(new CloseEvent(true));
+            } finally {
+                BusStation.getBus().post(new NotifMsgEvent("Destroy"));
+                BusStation.getBus().unregister(this);
             }
-        } catch (IOException e) {
-            Log.e(TAG, "Error connecting or read to socket channel", e);
-            BusStation.getBus().post(new CloseEvent(true));
-        } finally {
-            BusStation.getBus().post(new NotifMsgEvent("Destroy"));
-            BusStation.getBus().unregister(this);
         }
+    }
+
+    private boolean startAceServer() {
+        try {
+            if (startAceServer.exist()) {
+                startAceServer.start();
+                return true;
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.i(TAG, "The Ace Stream Server cannot be found");
+        }
+
+        return false;
     }
 
     @Subscribe
     public void onEvent(CloseEvent close) {
         isStop = close.isClose;
+
     }
 
     @Subscribe
@@ -124,7 +131,7 @@ public class Server {
                 readableByteChannel = Channels.newChannel(bufferedInputStream);
                 while (readableByteChannel.read(byteBuffer) > -1) {
                     byteBuffer.flip();
-                    while(byteBuffer.hasRemaining()) {
+                    while (byteBuffer.hasRemaining()) {
                         socket.sendData(byteBuffer);
                     }
                     byteBuffer.clear();

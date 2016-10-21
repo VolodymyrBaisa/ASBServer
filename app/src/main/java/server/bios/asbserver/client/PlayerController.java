@@ -1,7 +1,7 @@
 package server.bios.asbserver.client;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by BIOS on 10/1/2016.
@@ -12,7 +12,7 @@ public class PlayerController {
     private volatile static PlayerController channelsStorage;
 
     private PlayerController() {
-        storage = new HashMap<>();
+        storage = new ConcurrentHashMap<>();
     }
 
     public static PlayerController getInstance() {
@@ -29,7 +29,7 @@ public class PlayerController {
         return storage.containsKey(channel);
     }
 
-    public void put(String channel, Integer count) {
+    public synchronized void put(String channel, Integer count) {
         storage.put(channel, count);
     }
 
