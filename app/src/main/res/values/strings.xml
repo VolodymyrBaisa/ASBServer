@@ -3,6 +3,12 @@
     <string name="app_label_settings">Settings ASBServer</string>
     <string name="app_label_user_profile_name">User Profile Settings</string>
 
+    <string name="app_server_start">Start</string>
+    <string name="app_server_running">Running</string>
+    <string name="app_server_stop">Stop</string>
+
+    <string name="app_information_ace_stream_cannot_be_found">The Ace Stream Server cannot be found</string>
+
     <string name="app_progress_dialog_title">Start AceStream</string>
     <string name="app_progress_dialog_msg">Tray connection...</string>
 

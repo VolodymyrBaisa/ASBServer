@@ -30,7 +30,6 @@ public class DataExchange implements Runnable {
     private String content;
     private _Socket socket;
     private volatile boolean isStop;
-    private volatile int counter;
 
 
     public DataExchange(_Socket socket, String command, String content) {
@@ -67,21 +66,22 @@ public class DataExchange implements Runnable {
             clientSocket.sendData(aceStreamAPI.loadasync(command, content).concat("\r\n"));
 
             channel = getResponse();
-//????
-            counter = playerController.get(channel) == null ? 0 : playerController.get(channel);
-            System.out.println(counter + "up");
+
             if (!channelsStorage.contains(channel)) {
                 clientSocket.sendData(aceStreamAPI.start(command, content).concat("\r\n"));
 
                 String link = getResponse();
                 channelsStorage.put(channel, link);
+                playerController.put(channel, 0);
 
                 new Thread(() -> {
-                    System.out.println("Start-1======================================");
-                    playerController.put(channel, counter+=1);
+                    if(playerController.contains(channel)) {
+                        playerController.put(channel, playerController.get(channel) + 1);
+                    }
                     BusStation.getBus().post(new LinkEvent(link, socket));
-                    playerController.put(channel, counter-=1);
-                    System.out.println("Stop-1======================================");
+                    if(playerController.contains(channel)) {
+                        playerController.put(channel, playerController.get(channel) - 1);
+                    }
                 }).start();
 
                 getResponse();
@@ -91,11 +91,13 @@ public class DataExchange implements Runnable {
             } else {
                 String link = channelsStorage.get(channel);
                 new Thread(() -> {
-                    System.out.println("Start-2======================================");
-                    playerController.put(channel, counter+=1);
+                    if(playerController.contains(channel)) {
+                        playerController.put(channel, playerController.get(channel) + 1);
+                    }
                     BusStation.getBus().post(new LinkEvent(link, socket));
-                    playerController.put(channel, counter-=1);
-                    System.out.println("Stop-2 ======================================");
+                    if(playerController.contains(channel)) {
+                        playerController.put(channel, playerController.get(channel) - 1);
+                    }
                 }).start();
             }
         } catch (IOException e) {
@@ -159,7 +161,6 @@ public class DataExchange implements Runnable {
                             return "";
                     }
                 }
-                System.out.println(counter + "down");
             } while (!(isStop = isStop(channel)));
         } catch (IOException e) {
             Log.e(TAG, "Error read buffer from socket channel", e);

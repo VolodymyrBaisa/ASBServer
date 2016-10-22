@@ -1,4 +1,4 @@
-package server.bios.asbserver.client.autostart;
+package server.bios.asbserver.service.autostart;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -15,15 +15,15 @@ public class StartAceServer {
     private static final String PACKAGE_NAME = "org.acestream.media";
     private static final String CLASS = "org.acestream.engine.ContentStartActivity";
 
-    private StartAceServer(Context context){
+    private StartAceServer(Context context) {
         this.context = context;
     }
 
-    public static StartAceServer getInstance(){
+    public static StartAceServer getInstance() {
         return startAceServer;
     }
 
-    public static void init(Context context){
+    public static void init(Context context) {
 
         synchronized (StartAceServer.class) {
             startAceServer = new StartAceServer(context);
@@ -33,11 +33,11 @@ public class StartAceServer {
     public boolean exist() throws PackageManager.NameNotFoundException {
         PackageManager packageManager = context.getPackageManager();
         PackageInfo packageInfo = packageManager.getPackageInfo(PACKAGE_NAME, 0);
-        if(packageInfo != null) return true;
+        if (packageInfo != null) return true;
         return false;
     }
 
-    public void start(){
+    public void start() {
         Intent intent = new Intent();
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setComponent(new ComponentName(PACKAGE_NAME, CLASS));
