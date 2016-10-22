@@ -29,7 +29,7 @@ public class PlayerController {
         return storage.containsKey(channel);
     }
 
-    public synchronized void put(String channel, Integer count) {
+    public void put(String channel, Integer count) {
         storage.put(channel, count);
     }
 
