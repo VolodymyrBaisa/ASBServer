@@ -74,15 +74,7 @@ public class DataExchange implements Runnable {
                 channelsStorage.put(channel, link);
                 playerController.put(channel, 0);
 
-                new Thread(() -> {
-                    if(playerController.contains(channel)) {
-                        playerController.put(channel, playerController.get(channel) + 1);
-                    }
-                    BusStation.getBus().post(new LinkEvent(link, socket));
-                    if(playerController.contains(channel)) {
-                        playerController.put(channel, playerController.get(channel) - 1);
-                    }
-                }).start();
+                sendPlaylist(link);
 
                 getResponse();
 
@@ -90,15 +82,7 @@ public class DataExchange implements Runnable {
                 playerController.remove(channel);
             } else {
                 String link = channelsStorage.get(channel);
-                new Thread(() -> {
-                    if(playerController.contains(channel)) {
-                        playerController.put(channel, playerController.get(channel) + 1);
-                    }
-                    BusStation.getBus().post(new LinkEvent(link, socket));
-                    if(playerController.contains(channel)) {
-                        playerController.put(channel, playerController.get(channel) - 1);
-                    }
-                }).start();
+                sendPlaylist(link);
             }
         } catch (IOException e) {
             Log.e(TAG, "Error write buffer to socket channel", e);
@@ -120,6 +104,18 @@ public class DataExchange implements Runnable {
                 Log.e(TAG, "Error close socket channel", e);
             }
         }
+    }
+
+    private void sendPlaylist(String link) {
+        new Thread(() -> {
+            if (playerController.contains(channel)) {
+                playerController.put(channel, playerController.get(channel) + 1);
+            }
+            BusStation.getBus().post(new LinkEvent(link, socket));
+            if (playerController.contains(channel)) {
+                playerController.put(channel, playerController.get(channel) - 1);
+            }
+        }).start();
     }
 
     private String getResponse() {
@@ -168,8 +164,8 @@ public class DataExchange implements Runnable {
         return "";
     }
 
-    private boolean isStop(String channel){
-        if(channel != null && !channel.isEmpty() && playerController.get(channel) != null) {
+    private boolean isStop(String channel) {
+        if (channel != null && !channel.isEmpty() && playerController.get(channel) != null) {
             if (playerController.get(channel) == 0) {
                 return true;
             }

@@ -16,7 +16,6 @@ import java.nio.channels.ReadableByteChannel;
 import server.bios.asbserver.bus.BusStation;
 import server.bios.asbserver.bus.CloseEvent;
 import server.bios.asbserver.bus.LinkEvent;
-import server.bios.asbserver.bus.NotifMsgEvent;
 import server.bios.asbserver.client.DataExchange;
 import server.bios.asbserver.server._interface._Response;
 import server.bios.asbserver.server._interface._Socket;
@@ -96,6 +95,7 @@ public class Server {
         _Socket socket = event.socket;
         _Response response = null;
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(0xfff);
+        BufferedInputStream bufferedInputStream = null;
         ReadableByteChannel readableByteChannel = null;
         try {
             String link = event.link;
@@ -106,7 +106,7 @@ public class Server {
 
                 String headers = response.getHeaderResponce().toString();
                 socket.sendData(charsetUtils.charsetEncoder(headers, "UTF-8"));
-                BufferedInputStream bufferedInputStream = new BufferedInputStream(response.byteStream());
+                bufferedInputStream = new BufferedInputStream(response.byteStream());
                 readableByteChannel = Channels.newChannel(bufferedInputStream);
                 while (readableByteChannel.read(byteBuffer) > -1) {
                     byteBuffer.flip();
@@ -118,9 +118,10 @@ public class Server {
                 socket.getData();
             }
 
-        } catch (IOException e) {}
-        finally {
+        } catch (IOException e) {
+        } finally {
             try {
+                if (bufferedInputStream != null) bufferedInputStream.close();
                 if (readableByteChannel != null) readableByteChannel.close();
                 if (socket != null) socket.close();
                 if (response != null) response.close();

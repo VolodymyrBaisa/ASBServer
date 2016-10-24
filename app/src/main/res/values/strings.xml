@@ -27,7 +27,7 @@
     <string name="app_pref_summary_ace_stream_out_video_port">Ace Steam server transferring video data through this port</string>
 
     <string name="app_pref_category_asb_server_settings">ASBServer Settings</string>
-    <string name="app_pref_asb_server_port">ASBServer port</string>
+    <string name="app_pref_asb_server_port">ASBServer port. Require restarting app for accept changes</string>
     <string name="app_pref_summary_asb_server_port">Connect to the ASBServer</string>
 
     <string name="app_pref_ace_stream_gender">Gender</string>

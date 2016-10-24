@@ -40,13 +40,11 @@ public class HttpResponse {
         private Response response;
 
         public ServerResponse(URL url) throws IOException {
-            if (client == null) throw new NullPointerException("client == null");
             Request request = new Request.Builder().url(url).build();
             response = client.newCall(request).execute();
         }
 
         public StringBuilder getHeaderResponce() {
-            if (response == null) throw new NullPointerException("response == null");
             StringBuilder stringBuilder = new StringBuilder();
 
             stringBuilder.append(parseProtocol(response.protocol()).concat(" ")
@@ -64,12 +62,10 @@ public class HttpResponse {
         }
 
         public InputStream byteStream() {
-            if (response == null) throw new NullPointerException("response == null");
             return response.body().byteStream();
         }
 
         public String getString() throws IOException {
-            if (response == null) throw new NullPointerException("response == null");
             return response.body().string();
         }
 
@@ -89,7 +85,6 @@ public class HttpResponse {
         }
 
         public void close() {
-            if (response == null) throw new NullPointerException("response == null");
             response.body().close();
         }
     }

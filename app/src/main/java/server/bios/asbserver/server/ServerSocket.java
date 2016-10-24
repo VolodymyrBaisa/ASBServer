@@ -47,7 +47,6 @@ public class ServerSocket {
         }
 
         public ByteBuffer getData() throws IOException {
-            if (socketChannel == null) throw new NullPointerException("socketChannel == null");
             socketChannel.read(getBuffer);
             getBuffer.flip();
             ByteBuffer buffer = getBuffer.duplicate();
@@ -56,7 +55,6 @@ public class ServerSocket {
         }
 
         public void sendData(ByteBuffer byteBuffer) throws IOException {
-            if (socketChannel == null) throw new NullPointerException("socketChannel == null");
             socketChannel.write(byteBuffer);
         }
 

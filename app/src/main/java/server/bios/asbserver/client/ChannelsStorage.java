@@ -1,7 +1,7 @@
 package server.bios.asbserver.client;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by BIOS on 10/1/2016.
@@ -12,7 +12,7 @@ public class ChannelsStorage {
     private volatile static ChannelsStorage channelsStorage;
 
     private ChannelsStorage() {
-        storage = new ConcurrentHashMap<>();
+        storage = new HashMap<>();
     }
 
     public static ChannelsStorage getInstance() {

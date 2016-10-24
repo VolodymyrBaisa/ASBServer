@@ -43,7 +43,6 @@ public class ClientSocket {
     }
 
     public void sendData(String msg) throws IOException {
-        if (socketChannel == null) throw new NullPointerException("socketChannel == null");
         sendBuffer.put(msg.getBytes());
         sendBuffer.flip();
         socketChannel.write(sendBuffer);
@@ -51,7 +50,6 @@ public class ClientSocket {
     }
 
     public String getData() throws IOException {
-        if (socketChannel == null) throw new NullPointerException("socketChannel == null");
         socketChannel.read(getBuffer);
         getBuffer.flip();
         String chars = charsetUtils.charsetDecoder(getBuffer, "UTF-8");
